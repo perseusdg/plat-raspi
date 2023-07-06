@@ -35,7 +35,7 @@
 
 #include <uk/plat/bootstrap.h>
 #include <uk/plat/time.h>
-#include <arm/cpu.h>
+#include <uk/plat/common/cpu.h>
 #if CONFIG_RASPI_LCD
 	#include <raspi/lfb.h>
 #endif
@@ -46,6 +46,9 @@
 #include <raspi/time.h>
 #include <uk/print.h>
 #include <uk/arch/types.h>
+#include <uk/assert.h>
+#include <uk/errptr.h>
+#include <uk/config.h>
 
 //smcc_psci_callfn_t smcc_psci_call;
 

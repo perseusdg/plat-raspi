@@ -24,103 +24,106 @@
 #include <uk/plat/common/sections.h>
 #include <uk/essentials.h>
 #include <raspi/sysregs.h>
+#include <stddef.h>
 
 int ukplat_memregion_count(void)
 {
 	return 7;
 }
 
-int ukplat_memregion_get(int i, struct ukplat_memregion_desc *m)
+int ukplat_memregion_get(int i, struct ukplat_memregion_desc **m)
 {
-	int ret;
+	static struct ukplat_memregion_desc mrd[7];
 
 	UK_ASSERT(m);
 
 	switch (i) {
 	case 0: /* stack */
-		m->base  = (void *) 0;
-		m->len   = (size_t) __TEXT;
-		m->flags = (UKPLAT_MEMRF_RESERVED
-			    | UKPLAT_MEMRF_READABLE
-			    | UKPLAT_MEMRF_WRITABLE);
-		ret = 0;
+		mrd[i].pbase = 0;
+		mrd[i].vbase = 0;
+		mrd[i].len =   __TEXT;
+		mrd[i].type = UKPLAT_MEMRT_STACK ;
+		mrd[i].flags = UKPLAT_MEMRF_READ | UKPLAT_MEMRF_WRITE ;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "stack";
+		strncpy(mrd[i].name,"stack",sizeof(mrd[i].name)-1);
 #endif
+		*m = &mrd[i];
 		break;
 	case 1: /* text */
-		m->base  = (void *) __TEXT;
-		m->len   = (size_t) __ETEXT - (size_t) __TEXT;
-		m->flags = (UKPLAT_MEMRF_RESERVED
-			    | UKPLAT_MEMRF_READABLE);
+		mrd[i].pbase = __TEXT;
+		mrd[i].vbase = __TEXT;
+		mrd[i].len = __ETEXT - __TEXT;
+		mrd[i].type = UKPLAT_MEMRT_KERNEL;
+		mrd[i].flags = UKPLAT_MEMRF_READ;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "text";
+		strncpy(mrd[i].name,"text",sizeof(mrd[i].name)-1);
 #endif
-		ret = 0;
+		*m = &mrd[i];
 		break;
 	case 2: /* rodata */
-		m->base  = (void *) __RODATA;
-		m->len   = (size_t) __ERODATA - (size_t) __RODATA;
-		m->flags = (UKPLAT_MEMRF_RESERVED
-			    | UKPLAT_MEMRF_READABLE);
+		mrd[i].pbase = __RODATA;
+		mrd[i].vbase = __RODATA;
+		mrd[i].len = __ERODATA - __RODATA;
+		mrd[i].type = UKPLAT_MEMRT_KERNEL;
+		mrd[i].flags = UKPLAT_MEMRF_READ;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "rodata";
+		strncpy(mrd[i].name, "rodata", sizeof(mrd[i].name) - 1);
 #endif
-		ret = 0;
+		*m = &mrd[i];
 		break;
 	case 3: /* ctors */
-		m->base  = (void *) __CTORS;
-		m->len   = (size_t) __ECTORS - (size_t) __CTORS;
-		m->flags = (UKPLAT_MEMRF_RESERVED
-			    | UKPLAT_MEMRF_READABLE);
+		mrd[i].pbase = __CTORS;
+		mrd[i].vbase = __CTORS;
+		mrd[i].len = __ECTORS - __CTORS;
+		mrd[i].type = UKPLAT_MEMRT_KERNEL;
+		mrd[i].flags = UKPLAT_MEMRF_READ;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "ctors";
+		strncpy(mrd[i].name, "ctors", sizeof(mrd[i].name) - 1);
 #endif
-		ret = 0;
+		*m = &mrd[i];
 		break;
 	case 4: /* data */
-		m->base  = (void *) __DATA;
-		m->len   = (size_t) __EDATA - (size_t) __DATA;
-		m->flags = (UKPLAT_MEMRF_RESERVED
-			    | UKPLAT_MEMRF_READABLE
-			    | UKPLAT_MEMRF_WRITABLE);
+		mrd[i].pbase = __DATA;
+		mrd[i].vbase = __DATA;
+		mrd[i].len = __EDATA - __DATA;
+		mrd[i].type = UKPLAT_MEMRT_KERNEL;
+		mrd[i].flags = UKPLAT_MEMRF_READ | UKPLAT_MEMRF_WRITE;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "data";
+		strncpy(mrd[i].name, "data", sizeof(mrd[i].name) - 1);
 #endif
-		ret = 0;
+		*m = &mrd[i];
 		break;
 	case 5: /* bss */
-		m->base  = (void *) __BSS_START;
-		m->len   = (size_t) __END - (size_t) __BSS_START;
-		m->flags = (UKPLAT_MEMRF_RESERVED
-			    | UKPLAT_MEMRF_READABLE
-			    | UKPLAT_MEMRF_WRITABLE);
+		mrd[i].pbase = __BSS_START;
+		mrd[i].vbase = __BSS_START;
+		mrd[i].len = __END - __BSS_START;
+		mrd[i].type = UKPLAT_MEMRT_KERNEL;
+		mrd[i].flags = UKPLAT_MEMRF_READ | UKPLAT_MEMRF_WRITE;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "bss";
+		strncpy(mrd[i].name, "bss", sizeof(mrd[i].name) - 1);
 #endif
-		ret = 0;
+		*m = &mrd[i];
 		break;
 	case 6: /* heap */
-		m->base  = (void *) __END;
-		m->len   = (size_t) (MMIO_BASE/2 - 1) - (size_t) __END;
-		m->flags = UKPLAT_MEMRF_ALLOCATABLE;
+		mrd[i].pbase = __END;
+		mrd[i].vbase = __END;
+		mrd[i].len = (MMIO_BASE/2 - 1) - __END;
+		mrd[i].type = UKPLAT_MEMRT_FREE;
+		mrd[i].flags = 0;
 #if CONFIG_UKPLAT_MEMRNAME
-		m->name  = "heap";
+		strncpy(mrd[i].name, "heap", sizeof(mrd[i].name) - 1);
 #endif
-		ret = 0;
+		*m = &mrd[i];
 		break;
 	default:
-		m->base  = __NULL;
-		m->len   = 0;
-		m->flags = 0x0;
-#if CONFIG_UKPLAT_MEMRNAME
-		m->name  = __NULL;
-#endif
-		ret = -1;
+		if (i < 0 || i >= ukplat_memregion_count())
+			return -1;
+
+		*m = &mrd[i - 7];
 		break;
 	}
 
-	return ret;
+	return 0;
 }
 
 int _ukplat_mem_mappings_init(void)
