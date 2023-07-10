@@ -26,12 +26,18 @@
 #include <errno.h>
 #include <uk/plat/common/cpu.h>
 #include <uk/plat/common/irq.h>
+#include <uk/print.h>
 #include <uk/plat/bootstrap.h>
+
 
 static void cpu_halt(void) __noreturn;
 
 void ukplat_terminate(enum ukplat_gstate request __unused)
 {
+	uk_pr_info("Unikraft on raspi halted\n");
+	/*TODO : Need to check the system off function in detail */
+	system_off();
+	
 	cpu_halt();
 }
 

@@ -49,8 +49,10 @@
 #include <uk/assert.h>
 #include <uk/errptr.h>
 #include <uk/config.h>
+// #include <arm/arm64/cpu.h>
+#include <arm/smccc.h>
 
-//smcc_psci_callfn_t smcc_psci_call;
+smccc_conduit_fn_t smccc_psci_call;
 
 static uint64_t assembly_entry;
 static uint64_t hardware_init_done;
